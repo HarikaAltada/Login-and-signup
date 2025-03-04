@@ -2,9 +2,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DataTable from "react-data-table-component";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 export default function Dashboard() {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -16,13 +19,19 @@ export default function Dashboard() {
 
     fetch("/api/user", { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => res.json())
-      .then((data) => setUsers(data.users))
-      .catch(() => router.push("/"));
+      .then((data) => {
+        setUsers(data.users);
+        setLoading(false);
+      })
+      .catch(() => {
+        router.push("/");
+        setLoading(false);
+      });
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove token from storage
-    router.push("/"); // Redirect to login page
+    localStorage.removeItem("token");
+    router.push("/");
   };
 
   const columns = [
@@ -83,7 +92,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-900 to-gray-800">
       {/* Logout Button */}
-      <div className="w-full flex justify-end p-2" >
+      <div className="w-full flex justify-end p-2">
         <button
           onClick={handleLogout}
           className="bg-gray-600 mr-7 cursor-pointer hover:bg-gray-600 text-white px-5 py-2 rounded-3xl"
@@ -94,14 +103,21 @@ export default function Dashboard() {
 
       <div className="w-full max-w-7xl">
         <p className="text-white text-center mb-6 text-lg font-semibold">List of Users</p>
-        <DataTable
-          columns={columns}
-          data={users}
-          pagination
-          highlightOnHover
-          striped
-          customStyles={customStyles}
-        />
+
+        {loading ? (
+          <div className="flex justify-center items-center py-10">
+            <FontAwesomeIcon icon={faSpinner} className="text-white h-5 w-5 text-3xl animate-spin" />
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={users}
+            pagination
+            highlightOnHover
+            striped
+            customStyles={customStyles}
+          />
+        )}
       </div>
     </div>
   );
